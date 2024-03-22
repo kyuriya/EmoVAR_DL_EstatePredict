@@ -40,6 +40,7 @@ news2023['filtered_nouns'] = news2023['nouns'].apply(filter_stop_words)
 
 #  새 컬럼을 확인하기 위해 DataFrame을 표시
 news2023 = news2023[['date', 'filtered_nouns']]
-news2023
+news2023.to_csv('/content/drive/MyDrive/Colab Notebooks/파인드알파/2023 final project/데이터셋/2023년/2023_부동산뉴스_불용어제거.csv',encoding='utf-8')
+
 
 
