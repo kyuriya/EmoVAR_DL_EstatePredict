@@ -61,4 +61,44 @@ for i,w  in enumerate(total_news['filtered_nouns']):
 #'sent_score'컬럼에 감성지수 저장
 total_news['sent_score'] = total
 
-total_news.to_csv('/content/drive/MyDrive/Colab Notebooks/파인드알파/2023 final project/데이터셋/2019_2023_부동산뉴스_감성지수.csv',encoding='utf-8',index=False)
+
+#사용가능한 리소스 한계로 각 년도의 월별로 동일한 비율로 랜덤 추출해서 총 50000건으로 데이터 개수 맞춤
+
+def filter_data_by_month(df, date_column, target_count=50000):
+    # date_column을 datetime으로 파싱
+    df[date_column] = pd.to_datetime(df[date_column])
+
+    # 데이터를 연도와 달별로 그룹화
+    grouped = df.groupby([df[date_column].dt.year, df[date_column].dt.month])
+
+    # 목표 수에 맞춰 각 그룹별 샘플 수 계산
+    samples_per_group = target_count // len(grouped)
+    remaining_samples = target_count % len(grouped)  # 나머지 처리용
+
+    # 샘플링된 데이터를 저장할 빈 DataFrame 초기화
+    sampled_df = pd.DataFrame()
+
+    # 나누어 떨어지지 않아 50000개를 정확히 못 맞출 경우 처리를 위한 추가 샘플 필요
+    extra_samples_needed = remaining_samples
+
+    for name, group in grouped:
+        # 원하는 샘플 수보다 그룹이 작으면 전체 그룹을 취함
+        if len(group) <= samples_per_group:
+            sampled_df = pd.concat([sampled_df, group])
+            # samples_per_group보다 적은 샘플을 취했다면 나중에 추가 샘플을 더 가져와야 함
+            extra_samples_needed += (samples_per_group - len(group))
+        else:
+            # 추가 샘플을 분배할 필요가 있다면 일부 그룹에 1을 더함
+            if extra_samples_needed > 0:
+                sampled_group = group.sample(n=samples_per_group + 1)
+                extra_samples_needed -= 1
+            else:
+                sampled_group = group.sample(n=samples_per_group)
+            sampled_df = pd.concat([sampled_df, sampled_group])
+
+    return sampled_df
+
+filtered_news = filter_data_by_month(total_news, 'date')
+
+
+filtered_news.to_csv('/content/drive/MyDrive/Colab Notebooks/파인드알파/2023 final project/데이터셋/2020_2023_부동산뉴스_감성지수.csv',encoding='utf-8',index=False)
